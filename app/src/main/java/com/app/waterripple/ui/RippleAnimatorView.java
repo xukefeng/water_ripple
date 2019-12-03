@@ -1,6 +1,7 @@
 package com.app.waterripple.ui;
 
 import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.animation.PropertyValuesHolder;
@@ -69,7 +70,7 @@ public class RippleAnimatorView extends RelativeLayout {
         //计算最大放大倍速
         float maxValue = UIUtils.displayMetricsWidth * 1.6f / UIUtils.getInstance().getWidth(radius + strokeWidth / 2);
         //延时
-        int rippleDuration = 3500;
+        int rippleDuration = 4800;
         int singleDelay = rippleDuration / 6;//间隔时间
         for (int i = 0; i < 6; i++) {
             RippleView rippleView = new RippleView(this);
@@ -105,6 +106,11 @@ public class RippleAnimatorView extends RelativeLayout {
     public void startRippleAnimation() {
         //动画是否启用
         if (!isAnimationRunning()) {
+             ArrayList<Animator> childAnimations= animatorSet.getChildAnimations();
+             for (Animator childAnimation: childAnimations)
+             {
+                 ((ObjectAnimator)childAnimation).setRepeatCount(ValueAnimator.INFINITE);
+             }
             for (RippleView rippleView : viewList) {
                 rippleView.setVisibility(VISIBLE);
             }
@@ -118,11 +124,28 @@ public class RippleAnimatorView extends RelativeLayout {
     public void stopRippAnimation() {
         //动画是否开启
         if (isAnimationRunning()) {
-            for (RippleView rippleView : viewList) {
-                rippleView.setVisibility(INVISIBLE);
+            //for (RippleView rippleView : viewList) {
+               // rippleView.setVisibility(INVISIBLE);
+           // }
+            final ArrayList<Animator> childAnimations= animatorSet.getChildAnimations();
+            final int []count=new int[1];
+            for (Animator childAnimation:childAnimations)
+            {
+                ((ObjectAnimator)childAnimation).setRepeatCount(0);
+                childAnimation.addListener(new AnimatorListenerAdapter() {
+
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        super.onAnimationEnd(animation);
+                        count[0]++;
+                        if (count[0]==childAnimations.size())
+                        {
+                            animatorSet.end();
+                            animationRunning = false;
+                        }
+                    }
+                });
             }
-            animatorSet.end();
-            animationRunning = false;
         }
     }
 
